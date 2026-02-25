@@ -1,0 +1,229 @@
+﻿@model MVC.Models.Livro
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Details";
+    var userType = Context.Session.GetString("UserType");
+    var isBibliotecario = userType == "Bibliotecário";
+    var userId = Context.Session.GetInt32("UserId"); 
+    
+    var averageRating = ViewData["AverageRating"] as double?;
+    var isAvailable = ViewData["IsAvailable"] as bool? ?? false;
+    var approvedReviews = ViewData["ApprovedReviews"] as List<MVC.Models.Review> ?? new List<MVC.Models.Review>();
+    var userReview = ViewData["UserReview"] as MVC.Models.Review;
+}
+<div class="mb-4">
+    <a asp-action="Index" class="btn btn-secondary">Voltar ao Catálogo</a>
+</div>
+
+<div class="book-details-container">
+    <div class="row">
+        <!-- Coluna Esquerda: Capa e Disponibilidade -->
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="book-cover-section">
+                @if (!string.IsNullOrEmpty(Model?.CapaUrl))
+                {
+                    <img src="@Model.CapaUrl" alt="Capa do livro @Model.Titulo" class="book-cover-img" />
+                }
+                else
+                {
+                    <div class="book-cover-placeholder">
+                        <div class="d-flex align-items-center justify-content-center" style="width: 200px; height: 300px; background-color: #f0f0f0; border-radius: 8px;">
+                            <i class="bi bi-book" style="font-size: 80px; color: #999;"></i>
+                        </div>
+                    </div>
+                }
+                
+                @if (isAvailable)
+                {
+                    <button class="btn btn-available mt-3" disabled>
+                        <i class="bi bi-check-circle me-2"></i>
+                        Disponível para Reserva
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Detalhes -->
+        <div class="col-md-8 col-lg-9">
+            <!-- Título -->
+            <h1 class="book-title mb-4">@Model?.Titulo</h1>
+
+            <!-- Metadata -->
+            <div class="book-metadata mb-4">
+                @if (Model?.Autores != null && Model.Autores.Any())
+                {
+                    <div class="metadata-item">
+                        <strong>Autor(es):</strong> @string.Join(", ", Model.Autores.Select(a => a.Name))
+                    </div>
+                }
+                
+                @if (Model?.Generos != null && Model.Generos.Any())
+                {
+                    <div class="metadata-item">
+                        <strong>Género(s):</strong>
+                        <div class="category-tags mt-1">
+                            @foreach (var genero in Model.Generos)
+                            {
+                                <span class="category-tag">@genero.Name</span>
+                            }
+                        </div>
+                    </div>
+                }
+                
+                @if (Model?.EditoraNavigation != null)
+                {
+                    <div class="metadata-item">
+                        <strong>Editora:</strong> @Model.EditoraNavigation.Name
+                    </div>
+                }
+                
+                @if (Model?.AnoPublicacao.HasValue == true)
+                {
+                    <div class="metadata-item">
+                        <strong>Data de Publicação:</strong> @Model.AnoPublicacao.Value.ToString("dd/MM/yyyy")
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(Model?.Idioma))
+                {
+                    <div class="metadata-item">
+                        <strong>Idioma:</strong> @Model.Idioma
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(Model?.ISBN))
+                {
+                    <div class="metadata-item">
+                        <strong>ISBN:</strong> @Model.ISBN
+                    </div>
+                }
+            </div>
+
+            <!-- Avaliação -->
+            @if (averageRating.HasValue)
+            {
+                <div class="book-rating mb-4">
+                    <strong>Avaliação:</strong>
+                    <div class="rating-stars mt-1">
+                        @{
+                            var fullStars = (int)averageRating.Value;
+                            var hasHalfStar = averageRating.Value - fullStars >= 0.5;
+                        }
+                        @for (int i = 0; i < fullStars; i++)
+                        {
+                            <i class="bi bi-star-fill"></i>
+                        }
+                        @if (hasHalfStar)
+                        {
+                            <i class="bi bi-star-half"></i>
+                        }
+                        @for (int i = fullStars + (hasHalfStar ? 1 : 0); i < 5; i++)
+                        {
+                            <i class="bi bi-star"></i>
+                        }
+                        <span class="rating-text ms-2">(@averageRating.Value.ToString("F1")/5)</span>
+                    </div>
+                </div>
+            }
+
+            <!-- Sinopse -->
+            @if (!string.IsNullOrEmpty(Model?.Sinopse))
+            {
+                <div class="book-synopsis mb-4">
+                    <h3 class="section-title">Sinopse</h3>
+                    <hr class="section-divider" />
+                    <p class="synopsis-text">@Model.Sinopse</p>
+                </div>
+            }
+
+            <!-- Botões de Ação -->
+            <div class="book-actions mb-4">
+                    <a asp-controller="Reservas" asp-action="Create" asp-route-livroId="@Model?.IdLivro" class="btn btn-reserve me-2">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Agendar Reserva
+                    </a>
+                    
+                    @if (userReview != null)
+                    {
+                        <button type="button" class="btn btn-rate" data-bs-toggle="modal" data-bs-target="#editReviewModal">
+                            <i class="bi bi-pencil me-2"></i>
+                            Editar Avaliação
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-rate" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                            <i class="bi bi-star me-2"></i>
+                            Avaliar Livro
+                        </button>
+                    }
+                
+                @if (isBibliotecario)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model?.IdLivro" class="btn btn-primary">Editar</a>
+                }
+            </div>           
+
+            <!-- Avaliações dos Leitores -->
+            <div class="book-reviews">
+                <h3 class="section-title">Avaliações dos Leitores</h3>
+                <hr class="section-divider" />
+                
+                @if (approvedReviews.Any())
+                {
+                    <div class="reviews-list">
+                        @foreach (var review in approvedReviews)
+                        {
+                            <div class="review-item mb-3">
+                                <div class="review-header">
+                                    <strong>@review.IdUtilizadorNavigation?.Nome</strong>
+                                    @if (review.Rating.HasValue)
+                                    {
+                                        <div class="review-rating">
+                                            @for (int i = 0; i < review.Rating.Value; i++)
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(review.TextoReview))
+                                {
+                                    <p class="review-text mt-2">@review.TextoReview</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Ainda não há avaliações para este livro.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modais de Review -->
+    <!-- Modal de Criação -->
+    @if(userReview == null)
+    {
+        ViewData["Livro"] = Model;
+        ViewData["Review"] = null;
+        ViewData["UserId"] = userId;
+        ViewData["ModalId"] = "reviewModal";
+        ViewData["ModalTitle"] = "Escrever Review";
+        ViewData["SubmitButtonText"] = "Enviar avaliação";
+        @await Html.PartialAsync("_ReviewModal")
+    } 
+    <!-- Modal de Edição --> 
+    @if(userReview != null) {
+        ViewData["Livro"] = Model;
+        ViewData["Review"] = userReview;
+        ViewData["UserId"] = userId;
+        ViewData["ModalId"] = "editReviewModal";
+        ViewData["ModalTitle"] = "Editar Avaliação";
+        ViewData["SubmitButtonText"] = "Guardar alterações";
+        @await Html.PartialAsync("_ReviewModal")
+    }

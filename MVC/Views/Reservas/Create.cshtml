@@ -1,0 +1,178 @@
+﻿@model MVC.Models.Reserva
+
+@{
+    ViewData["Title"] = "Reservar Livro";
+}
+
+<div class="reservation-modal container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Reservar Livro</h5>
+            <a asp-controller="Home" asp-action="Index" class="btn-close" aria-label="Fechar"></a>
+        </div>
+        <div class="card-body">
+            <p>Selecione o período da reserva (máximo 2 semanas)</p>
+
+            <form asp-action="Create" id="reservaForm" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3">
+                    <label for="livroId" class="form-label">Livro</label>
+                    <select id="livroId" name="livroId" class="form-select" asp-items="ViewBag.Livros"></select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DataInicio" class="form-label">Data de início da reserva:</label>
+                    <input asp-for="DataInicio" class="form-control" type="date" id="dataInicio" name="DataInicio" />
+                    <small class="form-text text-muted">Selecione quando quer começar a reserva</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DataFim" class="form-label">Data de fim da reserva:</label>
+                    <input asp-for="DataFim" class="form-control" type="date" id="dataFim" name="DataFim" />
+                    <small class="form-text text-muted">Máximo de 2 semanas (14 dias)</small>
+                </div>
+
+                <div id="resumo" class="alert alert-success d-none">
+                    <h6>Resumo da Reserva</h6>
+                    <p><strong>Livro:</strong> <span id="resumoLivro">-</span></p>
+                    <p><strong>Data de início:</strong> <span id="resumoInicio">-</span></p>
+                    <p><strong>Data de fim:</strong> <span id="resumoFim">-</span></p>
+                    <p><strong>Duração:</strong> <span id="resumoDuracao">-</span></p>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="button" id="addToCartBtn" class="btn btn-outline-primary me-2">Adicionar ao Carrinho</button>
+                    <button type="button" id="openCartBtn" class="btn btn-primary">Ver Carrinho (<span id="cartCount">0</span>)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        (function(){
+            const inicio = document.getElementById('dataInicio');
+            const fim = document.getElementById('dataFim');
+            const livroSelect = document.getElementById('livroId');
+            const resumo = document.getElementById('resumo');
+            const resumoLivro = document.getElementById('resumoLivro');
+            const resumoInicio = document.getElementById('resumoInicio');
+            const resumoFim = document.getElementById('resumoFim');
+            const resumoDuracao = document.getElementById('resumoDuracao');
+            const confirmBtn = document.getElementById('confirmBtn');
+
+            function formatDate(d){
+                if(!d) return '-';
+                return d.toLocaleDateString();
+            }
+
+            function updateResumo(){
+                const li = livroSelect.options[livroSelect.selectedIndex]?.text || '-';
+                const s = inicio.value ? new Date(inicio.value) : null;
+                const e = fim.value ? new Date(fim.value) : null;
+                resumoLivro.textContent = li;
+                resumoInicio.textContent = s ? formatDate(s) : '-';
+                resumoFim.textContent = e ? formatDate(e) : '-';
+                if(s && e){
+                    const days = Math.round((e - s)/(1000*60*60*24)) + 1;
+                    resumoDuracao.textContent = days + ' dias';
+                    resumo.classList.remove('d-none');
+                } else {
+                    resumoDuracao.textContent = '-';
+                    resumo.classList.add('d-none');
+                }
+            }
+
+            function validateAndOpenModal(){
+                const s = inicio.value ? new Date(inicio.value) : null;
+                const e = fim.value ? new Date(fim.value) : null;
+                if(!s || !e){
+                    alert('Selecione data de início e fim.');
+                    return;
+                }
+                if(e < s){
+                    alert('A data de fim não pode ser anterior à data de início.');
+                    return;
+                }
+                const days = Math.round((e - s)/(1000*60*60*24)) + 1;
+                if(days > 14){
+                    alert('A duração máxima de reserva é de 14 dias.');
+                    return;
+                }
+                // populate modal and show
+                document.getElementById('modalLivro').textContent = resumoLivro.textContent;
+                document.getElementById('modalInicio').textContent = resumoInicio.textContent;
+                document.getElementById('modalFim').textContent = resumoFim.textContent;
+                document.getElementById('modalDuracao').textContent = resumoDuracao.textContent;
+                var modalEl = document.getElementById('confirmModal');
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+
+            inicio?.addEventListener('change', updateResumo);
+            fim?.addEventListener('change', updateResumo);
+            livroSelect?.addEventListener('change', updateResumo);
+            // CART implementation using localStorage so it persists across pages
+            const STORAGE_KEY = 'bookCart';
+            const cartCount = document.getElementById('cartCount');
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            const openCartBtn = document.getElementById('openCartBtn');
+
+            function loadCart(){
+                try{
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    return raw ? JSON.parse(raw) : [];
+                } catch(e){ return []; }
+            }
+
+            function saveCart(c){
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(c));
+                window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { count: c.length }}));
+            }
+
+            function updateCartBadge(){
+                const c = loadCart();
+                cartCount.textContent = c.length;
+            }
+
+            addToCartBtn?.addEventListener('click', function(){
+                const li = livroSelect.options[livroSelect.selectedIndex]?.text || '-';
+                const livroIdVal = livroSelect.value;
+                const s = inicio.value ? new Date(inicio.value) : null;
+                const e = fim.value ? new Date(fim.value) : null;
+                if(!s || !e){ alert('Selecione data de início e fim.'); return; }
+                if(e < s){ alert('Data de fim anterior.'); return; }
+                const days = Math.round((e - s)/(1000*60*60*24)) + 1;
+                if(days > 14){ alert('Máx 14 dias.'); return; }
+                const cart = loadCart();
+                if(cart.length >= 3){ window.dispatchEvent(new CustomEvent('showInfo',{detail:{message:'Limite de 3 reservas por checkout.'}})); return; }
+                // prevent duplicates (same livro and same dates)
+                const exists = cart.find(c => c.livroId === parseInt(livroIdVal) && c.startRaw === inicio.value && c.endRaw === fim.value);
+                if(exists){ window.dispatchEvent(new CustomEvent('showInfo',{detail:{message:'Essa reserva já foi adicionada ao carrinho.'}})); return; }
+                cart.push({ livroId: parseInt(livroIdVal), livroText: li, start: s.toLocaleDateString(), end: e.toLocaleDateString(), startRaw: inicio.value, endRaw: fim.value, days });
+                saveCart(cart);
+                updateResumo();
+                window.dispatchEvent(new CustomEvent('showInfo',{detail:{message:'Reserva adicionada ao carrinho. Pode continuar a navegar.'}}));
+            });
+
+            openCartBtn?.addEventListener('click', function(){
+                // signal global layout to open cart modal
+                window.dispatchEvent(new CustomEvent('openCartModal'));
+            });
+
+            // update initial badge
+            updateCartBadge();
+            window.addEventListener('cartUpdated', function(e){ cartCount.textContent = (e.detail && e.detail.count) ? e.detail.count : loadCart().length; });
+
+            // set sensible defaults: start today, end in 7 days
+            const today = new Date();
+            if(!inicio.value) inicio.value = today.toISOString().slice(0,10);
+            if(!fim.value){
+                const plus7 = new Date(); plus7.setDate(plus7.getDate()+6);
+                fim.value = plus7.toISOString().slice(0,10);
+            }
+            updateResumo();
+        })();
+    </script>
+}

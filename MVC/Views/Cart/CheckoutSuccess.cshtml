@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Reserva(s) criada(s)";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-success">Reserva(s) criada(s) com sucesso!</h3>
+                    <p class="mt-3">As suas reservas foram registadas. O estado inicial é <strong>Pendente</strong> até confirmação pela biblioteca.</p>
+                    <div class="mt-4">
+                        <a asp-controller="Reservas" asp-action="Index" class="btn btn-primary me-2">Ver Reservas</a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Continuar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

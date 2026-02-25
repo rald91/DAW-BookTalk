@@ -1,0 +1,46 @@
+@using Microsoft.AspNetCore.Http
+
+@{
+    var userName = Context.Session.GetString("UserName");
+    var userType = Context.Session.GetString("UserType");
+}
+
+<nav class="custom-navbar">
+    <div class="navbar-container">
+        <!-- Botão Menu Mobile -->
+        <button class="sidebar-toggle-btn" type="button" aria-label="Toggle sidebar">
+            <i class="bi bi-list" style="font-size: 24px;"></i>
+        </button>
+
+        <!-- Logo e Subtítulo (Esquerda) -->
+        <div class="navbar-logo">
+            <h1 class="logo-title">BookTalk</h1>
+            <p class="logo-subtitle">Biblioteca digital para 2º e 3º ciclos</p>
+        </div>
+
+        <!-- Barra de Pesquisa (Centro) -->
+        <div class="navbar-search">
+            <form class="search-container d-flex align-items-center" method="get" asp-controller="Livros" asp-action="Index">
+                <input type="text" name="q" class="form-control search-input" placeholder="Pesquisar livros..." value="@Context.Request.Query["q"]" />
+                <button type="submit" class="btn btn-primary ms-2 search-button">Pesquisar</button>
+            </form>
+            @if(userType != "Bibliotecário")
+            {
+                <button id="globalCartBtn" class="btn btn-link position-relative ms-2" title="Carrinho de Reservas">
+                    <i class="bi bi-basket" style="font-size:20px"></i>
+                    <span id="globalCartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                </button>
+            }
+        </div>
+
+        <!-- Informações do Utilizador (Direita) -->
+        <div class="navbar-user">
+            <div class="user-info">
+                <div class="user-name">@userName</div>
+                <div class="user-type">@userType</div>
+            </div>
+            <a asp-controller="Account" asp-action="Logout" class="logout-button">Sair</a>
+        </div>
+    </div>
+    <div class="navbar-separator"></div>
+</nav>

@@ -1,0 +1,47 @@
+@model IEnumerable<MVC.Models.Livro>
+@using Microsoft.AspNetCore.Http
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Index";
+    var userType = Context.Session.GetString("UserType");
+    var isBibliotecario = userType == "Bibliotecário";
+}
+
+<div class="book-grid container mt-4">
+    <h1>Catálogo</h1>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-secondary">Sem resultados.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var livro in Model)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        <img src="@livro.CapaUrl" class="card-img-top" alt="Capa de @livro.Titulo" style="height:250px;object-fit:contain;" />
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@livro.Titulo</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@(livro.Autores != null && livro.Autores.Any() ? string.Join(", ", livro.Autores.Select(a => a.Name)) : "-")</h6>
+                            <p class="card-text sinopse-min-2 text-wrap">@livro.Sinopse</p>
+                            <div class="mt-auto d-flex gap-2">
+                                <a asp-controller="Livros" asp-action="Details" asp-route-id="@livro.IdLivro" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye me-2"></i>
+                                    Ver Detalhes
+                                </a>
+                                @if(isBibliotecario)
+                                {
+                                      <a asp-action="Edit" asp-route-id="@livro.IdLivro" class="btn btn-primary" style="display:inline-flex;align-items:center;justify-content:center;">Editar</a>
+                                      <a asp-action="Delete" asp-route-id="@livro.IdLivro" class="btn btn-danger confirm-delete" data-delete-title="Remover Livro" data-delete-message="Tem a certeza que pretende remover este livro?" style="display:inline-flex;align-items:center;justify-content:center;">Remover</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

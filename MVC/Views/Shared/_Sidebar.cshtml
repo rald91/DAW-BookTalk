@@ -1,0 +1,71 @@
+@using Microsoft.AspNetCore.Http
+@{
+    var userId = Context.Session.GetInt32("UserId");
+    var userType = Context.Session.GetString("UserType");
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+@if (userId != null)
+{
+<aside class="sidebar">
+    <nav class="sidebar-nav">
+        @if (userType == "Bibliotecário")
+        {
+            <!-- Menu para o Bibliotecário -->
+            <a asp-controller="Home" asp-action="Index" class="sidebar-item @(currentController == "Home" && currentAction == "Index" ? "active" : "")">
+                <i class="bi bi-house sidebar-icon"></i>
+                <span>Página Inicial</span>
+            </a>
+
+            <a asp-controller="Livros" asp-action="Index" class="sidebar-item @(currentController == "Livros" && currentAction == "Index" ? "active" : "")">
+                <i class="bi bi-book sidebar-icon"></i>
+                <span>Catálogo</span>
+            </a>
+
+            <a asp-controller="Reservas" asp-action="Index" class="sidebar-item @(currentController == "Reservas" && currentAction == "Index" ? "active" : "")">
+                <i class="bi bi-calendar-check sidebar-icon"></i>
+                <span>Reservas</span>
+            </a>
+
+            <a asp-controller="Reviews" asp-action="Index" class="sidebar-item @(currentController == "Reviews" && currentAction == "Index" ? "active" : "")">
+                <i class="bi bi-star sidebar-icon"></i>
+                <span>Reviews</span>
+            </a>
+
+            <a asp-controller="Home" asp-action="Estatisticas" class="sidebar-item @(currentController == "Home" && currentAction == "Estatisticas" ? "active" : "")">
+                <i class="bi bi-bar-chart sidebar-icon"></i>
+                <span>Estatísticas</span>
+            </a>
+
+            <a asp-controller="Home" asp-action="Sobre" class="sidebar-item @(currentController == "Home" && currentAction == "Sobre" ? "active" : "")">
+                <i class="bi bi-info-circle sidebar-icon"></i>
+                <span>Sobre nós</span>
+            </a>
+
+            <a asp-controller="Livros" asp-action="Create" class="sidebar-item @(currentController == "Livros" && currentAction == "Create" ? "active" : "")">
+                <i class="bi bi-plus-circle sidebar-icon"></i>
+                <span>Adicionar Livro</span>
+            </a>
+        }
+        else if (userType == "Leitor")
+        {
+            <!-- Menu para o Leitor (estudante) -->
+            <a asp-controller="Home" asp-action="Index" class="sidebar-item @(currentController == "Home" && currentAction == "Index" ? "active" : "")">
+                <i class="bi bi-house sidebar-icon"></i>
+                <span>Página Inicial</span>
+            </a>
+
+            <a asp-controller="Livros" asp-action="Index" class="sidebar-item @(currentController == "Livros" && currentAction == "Index" ? "active" : "")">
+                <i class="bi bi-book sidebar-icon"></i>
+                <span>Catálogo</span>
+            </a>
+
+            <a asp-controller="Reservas" asp-action="Index" class="sidebar-item @(currentController == "Reservas" && currentAction == "Index" ? "active" : "")">
+                <i class="bi bi-calendar-check sidebar-icon"></i>
+                <span>Reservas</span>
+            </a>
+        }
+    </nav>
+</aside>
+}

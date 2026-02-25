@@ -1,0 +1,142 @@
+@model IEnumerable<MVC.Models.Livro>
+@{
+    ViewData["Title"] = "Página Inicial";
+    var userType = Context.Session.GetString("UserType");
+}
+
+@if (!string.IsNullOrEmpty(userType) && userType == "Bibliotecário")
+{
+    <div class="dashboard-page">
+        <div class="dashboard-panel reservations-panel">
+            <div class="panel-header">
+                <h4>
+                    <a asp-controller="Reservas" asp-action="Index">Reservas da semana (@( (ViewBag.ReservasWeek as IEnumerable<MVC.Models.Reserva>)?.Count() ?? 0 ))</a>
+                </h4>
+            </div>
+            <div class="panel-body">
+                <div class="dashboard-grid" style="display:block;color:inherit;font-size:inherit;">
+                    @{
+                        var reservas = ViewBag.ReservasWeek as IEnumerable<MVC.Models.Reserva>;
+                        if (reservas != null && reservas.Any())
+                        {
+                            <div class="row">
+                                @foreach(var r in reservas)
+                                {
+                                    var livro = r.IdLivros.FirstOrDefault();
+                                    <div class="col-md-3 mb-4">
+                                        <div class="card h-100">
+                                            <div style="height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                                                <img src="@(livro?.CapaUrl ?? Url.Content("~/lib/bootstrap/icons/book.svg"))" class="card-img-top" alt="Capa de @(livro?.Titulo ?? "Livro")" style="max-height:180px;width:auto;display:block;margin:0 auto;" />
+                                            </div>
+                                            <div class="card-body d-flex flex-column">
+                                                <h5 class="card-title">@((livro != null) ? livro.Titulo : string.Join(", ", r.IdLivros.Select(l=>l.Titulo)))</h5>
+                                                <h6 class="card-subtitle mb-2 text-muted">@((livro != null && livro.Autores != null && livro.Autores.Any()) ? string.Join(", ", livro.Autores.Select(a => a.Name)) : "")</h6>
+                                                <p class="card-text mb-1"><strong>Reservado por:</strong> @r.IdUtilizadorNavigation?.Nome</p>
+                                                <p class="card-text mb-1"><strong>Início:</strong> @r.DataInicio.ToString("dd/MM/yyyy")</p>
+                                                <p class="card-text"><strong>Fim:</strong> @(r.DataFim.HasValue ? r.DataFim.Value.ToString("dd/MM/yyyy") : "-")</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted">Nenhuma reserva pendente para esta semana.</div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-panel reviews-panel">
+            <div class="panel-header">
+                <h4>
+                    <a asp-controller="Reviews" asp-action="Index">
+                        Reviews por aprovar (@( (ViewBag.ReviewsPending as IEnumerable<MVC.Models.Review>)?.Count() ?? 0 ))
+                    </a>
+                </h4>
+            </div>
+            <div class="panel-body">
+                <div class="dashboard-grid" style="display:block;color:inherit;font-size:inherit;">
+                    @{
+                        var reviews = ViewBag.ReviewsPending as IEnumerable<MVC.Models.Review>;
+                        if (reviews != null && reviews.Any())
+                        {
+                            <div class="row">
+                                @foreach(var review in reviews)
+                                {
+                                    var livro = review.IdLivroNavigation;
+                                    <div class="col-md-3 mb-4">
+                                        <div class="card h-100">
+                                            <div style="height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                                                <img src="@(livro?.CapaUrl ?? Url.Content("~/lib/bootstrap/icons/book.svg"))" class="card-img-top" alt="Capa de @(livro?.Titulo ?? "Livro")" style="max-height:180px;width:auto;display:block;margin:0 auto;" />
+                                            </div>
+                                            <div class="card-body d-flex flex-column justify-content-between">
+                                                <h5 class="card-title">@(livro?.Titulo ?? "Livro")</h5>
+                                                <div>
+                                                    <p class="card-text mb-1"><strong>Avaliado por:</strong> @review.IdUtilizadorNavigation?.Nome</p>
+                                                    <p class="card-text mb-1">
+                                                        <strong>Rating:</strong>
+                                                        @if (review.Rating.HasValue)
+                                                        {
+                                                            <div class="review-rating" style="display:inline-flex;gap:2px;margin-left:8px;">
+                                                                @for (int i = 0; i < review.Rating.Value; i++)
+                                                                {
+                                                                    <i class="bi bi-star-fill" style="font-size:1rem;color:#ffc107;"></i>
+                                                                }
+                                                            </div>
+                                                        } 
+                                                    </p>
+                                                    <p class="card-text">
+                                                        <strong>Review:</strong>
+                                                        @if (!string.IsNullOrEmpty(review.TextoReview))
+                                                        {
+                                                            var excerpt = review.TextoReview.Length > 100 ? review.TextoReview.Substring(0, 100) + "..." : review.TextoReview;
+                                                            <span>@excerpt</span>
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted">Nenhuma review pendente.</div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="book-grid container mt-4">
+        <h2>Livros que podes gostar</h2>
+        <div class="row">
+            @foreach (var livro in Model)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        <img src="@livro.CapaUrl" class="card-img-top" alt="Capa de @livro.Titulo" style="height:250px;object-fit:contain;" />
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">@livro.Titulo</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">@(livro.Autores != null && livro.Autores.Any() ? string.Join(", ", livro.Autores.Select(a => a.Name)) : "-")</h6>
+                                    <p class="card-text sinopse-min-2 text-wrap">@livro.Sinopse</p>
+                                    <div class="mt-auto">
+                                        <a asp-controller="Livros" asp-action="Details" asp-route-id="@livro.IdLivro" class="btn btn-outline-primary btn-block">
+                                            <i class="bi bi-eye me-2"></i>
+                                            Ver Detalhes
+                                        </a>
+                                    </div>
+                                </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

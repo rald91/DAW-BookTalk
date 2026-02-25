@@ -1,0 +1,105 @@
+@using MVC.Models
+@{
+    var review = ViewData["Review"] as Review;
+    var livro = review?.IdLivroNavigation;
+    var modalId = ViewData["ModalId"] as string ?? "moderateReviewModal";
+    var modalLabelId = $"{modalId}Label";
+}
+
+<div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@modalLabelId" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header review-modal-header">
+                <h5 class="modal-title" id="@modalLabelId">Moderar Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Coluna Esquerda: Informações do Livro -->
+                    <div class="col-md-4">
+                        <h3 class="mb-3 text-center">@livro?.Titulo</h3>
+                        <div class="review-book-info">
+                            @if (!string.IsNullOrEmpty(livro?.CapaUrl))
+                            {
+                                <img src="@livro.CapaUrl" alt="Capa do livro @livro.Titulo" class="review-book-cover mb-3" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center mb-3" style="width: 200px; height: 300px; background-color: #f0f0f0; border-radius: 8px;">
+                                    <i class="bi bi-book" style="font-size: 80px; color: #999;"></i>
+                                </div>
+                            }
+                            
+                            <p class="text-muted mb-2">
+                                @if (livro?.Autores != null && livro.Autores.Any())
+                                {
+                                    @string.Join(", ", livro.Autores.Select(a => a.Name))
+                                }
+                            </p>
+                            @if (!string.IsNullOrEmpty(livro?.Sinopse))
+                            {
+                                <p class="small">@livro.Sinopse</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- Coluna Direita: Informações da Review -->
+                    <div class="col-md-8">
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <strong>Autor da Review:</strong> @review?.IdUtilizadorNavigation?.Nome 
+                            </div>
+                        </div>
+                        
+                         <div class="row mb-2">
+                            <div class="col-6"> 
+                                <strong>Data:</strong> @(review?.DataSubmissao.ToString("dd/MM/yyyy") ?? "-")
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <strong>Classificação:</strong>
+                            @if (review?.Rating.HasValue == true)
+                            {
+                                <div class="review-rating d-inline-flex align-items-center ms-2">
+                                    @for (int i = 0; i < review.Rating.Value; i++)
+                                    {
+                                        <i class="bi bi-star-fill" style="color: #ffc107;"></i>
+                                    }
+                                    @for (int i = review.Rating.Value; i < 5; i++)
+                                    {
+                                        <i class="bi bi-star" style="color: #ffc107;"></i>
+                                    }
+                                    <span class="ms-2">(@review.Rating.Value/5)</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="ms-2">-</span>
+                            }
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Texto da Review:</strong>
+                            <textarea class="form-control mt-2" rows="6" readonly>@(review?.TextoReview ?? "-")</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form asp-controller="Reviews" asp-action="Reject" asp-route-id="@review?.IdReview" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle me-2"></i>Rejeitar
+                    </button>
+                </form>
+                <form asp-controller="Reviews" asp-action="Approve" asp-route-id="@review?.IdReview" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Aprovar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

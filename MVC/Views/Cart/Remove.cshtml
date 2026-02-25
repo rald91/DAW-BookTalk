@@ -1,0 +1,30 @@
+@model MVC.Models.CartRemoveViewModel
+
+@{
+    ViewData["Title"] = "Remover item do carrinho";
+}
+
+<h1>Remover item</h1>
+
+@if (Model?.Item == null)
+{
+    <div class="text-muted">Item não encontrado.</div>
+}
+else
+{
+    <h5>Tem a certeza que pretende remover a seguinte reserva do carrinho?</h5>
+    <dl class="row">
+        <dt class="col-sm-3">Livro</dt>
+        <dd class="col-sm-9">@Model.Item.LivroText</dd>
+        <dt class="col-sm-3">Início</dt>
+        <dd class="col-sm-9">@Model.Item.DataInicio.ToString("yyyy-MM-dd")</dd>
+        <dt class="col-sm-3">Fim</dt>
+        <dd class="col-sm-9">@Model.Item.DataFim.ToString("yyyy-MM-dd")</dd>
+    </dl>
+
+    <form asp-controller="Cart" asp-action="RemoveConfirmed" method="post">
+        <input type="hidden" name="index" value="@Model.Index" />
+        <button type="submit" class="btn btn-danger">Remover</button>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+    </form>
+}

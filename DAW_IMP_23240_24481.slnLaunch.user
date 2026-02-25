@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "DAW",
+    "Projects": [
+      {
+        "Path": "API\\API.csproj",
+        "Action": "StartWithoutDebugging"
+      },
+      {
+        "Path": "MVC\\MVC.csproj",
+        "Action": "StartWithoutDebugging"
+      }
+    ]
+  }
+]

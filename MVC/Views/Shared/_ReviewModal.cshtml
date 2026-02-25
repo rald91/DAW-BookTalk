@@ -1,0 +1,193 @@
+@using MVC.Models
+@{
+    var livro = ViewData["Livro"] as Livro;
+    var review = ViewData["Review"] as Review;
+    var userId = ViewData["UserId"] as int?;
+    var modalId = ViewData["ModalId"] as string ?? "reviewModal";
+    var modalTitle = ViewData["ModalTitle"] as string ?? "Review";
+    var submitButtonText = ViewData["SubmitButtonText"] as string ?? "Submeter";
+    var isEditMode = review != null;
+    var ratingFieldId = $"{modalId}Rating";
+    var textoReviewFieldId = $"{modalId}TextoReview";
+    var modalLabelId = $"{modalId}Label";
+}
+
+<div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@modalLabelId" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header review-modal-header">
+                <h5 class="modal-title" id="@modalLabelId">@modalTitle</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            @if (isEditMode)
+            {
+                <form asp-controller="Reviews" asp-action="Edit" asp-route-id="@review.IdReview" method="post">
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Coluna Esquerda: Informações do Livro -->
+                            <div class="col-md-4">
+                                <h3 class="mb-3 text-center">@livro?.Titulo</h3>
+                                <div class="review-book-info">
+                                    @if (!string.IsNullOrEmpty(livro?.CapaUrl))
+                                    {
+                                        <img src="@livro.CapaUrl" alt="Capa do livro @livro.Titulo" class="review-book-cover mb-3" />
+                                    }
+                                    else
+                                    {
+                                        <div class="review-book-cover-placeholder mb-3">
+                                            <div class="d-flex align-items-center justify-content-center" style="width: 150px; height: 225px; background-color: #f0f0f0; border-radius: 8px;">
+                                                <i class="bi bi-book" style="font-size: 60px; color: #999;"></i>
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    <div class="review-book-details"> 
+                                        @if (livro?.Autores != null && livro.Autores.Any())
+                                        {
+                                            <p class="mb-2"><strong>Autor:</strong> @string.Join(", ", livro.Autores.Select(a => a.Name))</p>
+                                        }
+                                        @if (livro?.Generos != null && livro.Generos.Any())
+                                        {
+                                            <p class="mb-2"><strong>Género(s):</strong> @string.Join(", ", livro.Generos.Select(g => g.Name))</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Coluna Direita: Formulário de Edição -->
+                            <div class="col-md-8">
+                                <!-- Estado da Aprovação -->
+                                <div class="mb-3">
+                                    <label class="form-label">Estado da Aprovação:</label>
+                                    @if (review.Status == "Aprovada")
+                                    {
+                                        <span class="badge bg-success">Aprovada</span>
+                                    }
+                                    else if (review.Status == "Rejeitada")
+                                    {
+                                        <span class="badge bg-danger">Rejeitada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Pendente</span>
+                                    }
+                                </div>
+
+                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                                
+                                <input type="hidden" name="IdReview" value="@review.IdReview" />
+                                <input type="hidden" name="IdLivro" value="@livro?.IdLivro" />
+                                <input type="hidden" name="IdUtilizador" value="@userId" />
+                                <input type="hidden" name="Status" value="@review.Status" />
+                                <input type="hidden" name="DataSubmissao" value="@review.DataSubmissao.ToString("yyyy-MM-dd")" />
+                                @if (review.DataAprovacao.HasValue)
+                                {
+                                    <input type="hidden" name="DataAprovacao" value="@review.DataAprovacao.Value.ToString("yyyy-MM-dd")" />
+                                }
+                                
+                                <div class="mb-3">
+                                    <label for="@ratingFieldId" class="form-label">Avaliação:</label>
+                                    <select name="Rating" id="@ratingFieldId" class="form-control">
+                                        <option value=""></option>
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            var stars = new string('★', i);
+                                            if (review.Rating == i)
+                                            {
+                                                <option value="@i" selected>@stars</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@i">@stars</option>
+                                            }
+                                        }
+                                    </select>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="Rating" data-valmsg-replace="true"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="@textoReviewFieldId" class="form-label">A tua review:</label>
+                                    <textarea name="TextoReview" id="@textoReviewFieldId" class="form-control" rows="6" placeholder="Escreve a tua avaliação sobre este livro...">@review.TextoReview</textarea>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="TextoReview" data-valmsg-replace="true"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">@submitButtonText</button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <form asp-controller="Reviews" asp-action="Create" method="post">
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Coluna Esquerda: Informações do Livro -->
+                            <div class="col-md-4">
+                                <h3 class="mb-3 text-center">@livro?.Titulo</h3>
+                                <div class="review-book-info">
+                                    @if (!string.IsNullOrEmpty(livro?.CapaUrl))
+                                    {
+                                        <img src="@livro.CapaUrl" alt="Capa do livro @livro.Titulo" class="review-book-cover mb-3" />
+                                    }
+                                    else
+                                    {
+                                        <div class="review-book-cover-placeholder mb-3">
+                                            <div class="d-flex align-items-center justify-content-center" style="width: 150px; height: 225px; background-color: #f0f0f0; border-radius: 8px;">
+                                                <i class="bi bi-book" style="font-size: 60px; color: #999;"></i>
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    <div class="review-book-details"> 
+                                        @if (livro?.Autores != null && livro.Autores.Any())
+                                        {
+                                            <p class="mb-2"><strong>Autor:</strong> @string.Join(", ", livro.Autores.Select(a => a.Name))</p>
+                                        }
+                                        @if (livro?.Generos != null && livro.Generos.Any())
+                                        {
+                                            <p class="mb-2"><strong>Género(s):</strong> @string.Join(", ", livro.Generos.Select(g => g.Name))</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Coluna Direita: Formulário de Avaliação -->
+                            <div class="col-md-8">
+                                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                                
+                                <input type="hidden" name="IdLivro" value="@livro?.IdLivro" />
+                                <input type="hidden" name="IdUtilizador" value="@userId" />
+                                
+                                <div class="mb-3">
+                                    <label for="@ratingFieldId" class="form-label">Avaliação:</label>
+                                    <select name="Rating" id="@ratingFieldId" class="form-control">
+                                        <option value=""></option>
+                                        <option value="1">★</option>
+                                        <option value="2">★★</option>
+                                        <option value="3">★★★</option>
+                                        <option value="4">★★★★</option>
+                                        <option value="5">★★★★★</option>
+                                    </select>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="Rating" data-valmsg-replace="true"></span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="@textoReviewFieldId" class="form-label">A tua review:</label>
+                                    <textarea name="TextoReview" id="@textoReviewFieldId" class="form-control" rows="6" placeholder="Escreve a tua avaliação sobre este livro..."></textarea>
+                                    <span class="text-danger field-validation-valid" data-valmsg-for="TextoReview" data-valmsg-replace="true"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">@submitButtonText</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

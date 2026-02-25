@@ -1,0 +1,101 @@
+﻿@model IEnumerable<MVC.Models.Reserva>
+
+@{
+    var userType = Context.Session.GetString("UserType");
+    var reservasCount = Model == null ? 0 : Model.Count();
+    if (userType == "Bibliotecário")
+    {
+        ViewData["Title"] = "Reservas da semana";
+    }
+    else
+    {
+        ViewData["Title"] = "Reservas";
+    }
+}
+
+@if (userType == "Bibliotecário")
+{
+    <h1>Reservas da semana (@reservasCount)</h1>
+}
+else
+{
+    <h1>Reservas</h1>
+}
+
+@if (Model != null && Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.DataInicio)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DataFim)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IdUtilizadorNavigation)
+                </th>
+                <th>
+                    Livro
+                </th>
+                <th>
+                    Estado
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model) {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataInicio)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataFim)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IdUtilizadorNavigation.Email)
+                </td>
+                <td>
+                    @foreach(var l in item.IdLivros) {
+                        <text>@l.Titulo<br /></text>
+                    }
+                </td>
+                <td>
+                    @(item.Confirmada ? "Confirmada" : "Pendente")
+                </td>
+                <td>
+                    @if (userType == "Bibliotecário")
+                    {
+                        if (!item.Confirmada)
+                        {
+                            <form action='@Url.Action("Confirm", "Reservas")' method="post" style="display:inline">
+                                <input type="hidden" name="id" value="@item.IdReserva" />
+                                <button type="submit" class="btn btn-sm btn-success">Confirmar</button>
+                            </form>
+                            <span class="sep">&nbsp;&nbsp;</span>
+                            <a href='@Url.Action("Delete", "Reservas", new { id = item.IdReserva })' class="btn btn-danger" style="display:inline-flex;align-items:center;justify-content:center;padding:.375rem .5rem;">Rejeitar</a>
+                        }
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    if (userType == "Bibliotecário")
+    {
+        <div class="alert alert-info mt-4">
+            <p class="mb-0">Nenhuma reserva pendente.</p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-4">
+            <p class="mb-0">Ainda não tem nenhuma reserva.</p>
+        </div>
+    }
+}

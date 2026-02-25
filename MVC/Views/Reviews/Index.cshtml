@@ -1,0 +1,126 @@
+﻿@model IEnumerable<MVC.Models.Review>
+
+@{
+    var userType = Context.Session.GetString("UserType");
+    if (userType == "Bibliotecário")
+    {
+        ViewData["Title"] = "Reviews por Aprovar";
+    }
+    else
+    {
+        ViewData["Title"] = "Reviews";
+    }
+}
+
+<div class="container mt-4">
+    @if (userType == "Bibliotecário")
+    {
+        <h1>Reviews por Aprovar (@Model.Count())</h1>
+    }
+    else
+    {
+        <h1>Reviews</h1>
+    }
+    
+    @if (Model.Any())
+    {
+        @foreach (var review in Model)
+        {
+            var livro = review.IdLivroNavigation;
+            var modalId = $"moderateModal{review.IdReview}";
+            
+            <div class="card mt-4">
+                <div class="row g-0">
+                    <!-- Coluna Esquerda: Capa e Botão -->
+                    <div class="col-md-2 d-flex flex-column align-items-center p-3">
+                        <div style="height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:15px;">
+                            @if (!string.IsNullOrEmpty(livro?.CapaUrl))
+                            {
+                                <img src="@livro.CapaUrl" class="img-fluid" alt="Capa de @livro.Titulo" style="max-height:180px;width:auto;" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-book" style="font-size: 80px; color: #999;"></i>
+                            }
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#@modalId">
+                            <i class="bi bi-eye me-2"></i>Moderar
+                        </button>
+                    </div>
+                    
+                    <!-- Coluna Direita: Informações -->
+                    <div class="col-md-10">
+                        <div class="card-body">
+                            <h5 class="card-title">@(livro?.Titulo ?? "Livro")</h5>
+                            <h6 class="card-subtitle mb-3 text-muted">
+                                @if (livro?.Autores != null && livro.Autores.Any())
+                                {
+                                    @string.Join(", ", livro.Autores.Select(a => a.Name))
+                                }
+                            </h6>
+                            
+                            <p class="card-text mb-1"><strong>Review de:</strong> @review.IdUtilizadorNavigation?.Nome</p>
+                            
+                            <p class="card-text mb-1">
+                                <strong>Classificação:</strong>
+                                @if (review.Rating.HasValue)
+                                {
+                                    <span class="review-rating ms-2">
+                                        @for (int i = 0; i < review.Rating.Value; i++)
+                                        {
+                                            <i class="bi bi-star-fill" style="color: #ffc107;"></i>
+                                        }
+                                        @for (int i = review.Rating.Value; i < 5; i++)
+                                        {
+                                            <i class="bi bi-star" style="color: #ffc107;"></i>
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="ms-2">-</span>
+                                }
+                            </p>
+                            
+                            <p class="card-text mb-1"><strong>Data:</strong> @review.DataSubmissao.ToString("dd/MM/yyyy")</p>
+                            
+                            <p class="card-text">
+                                <strong>Texto:</strong>
+                                @if (!string.IsNullOrEmpty(review.TextoReview))
+                                {
+                                    var excerpt = review.TextoReview.Length > 100 ? review.TextoReview.Substring(0, 100) + "..." : review.TextoReview;
+                                    <span>@(excerpt)</span>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal for review -->
+            var modalViewData = new ViewDataDictionary(ViewData);
+            modalViewData["Review"] = review;
+            modalViewData["ModalId"] = modalId;
+            @await Html.PartialAsync("_ModerateReviewModal", null, modalViewData)
+        }
+    }
+    else
+    {
+        if (userType == "Bibliotecário")
+        {
+            <div class="alert alert-info mt-4">
+                <p class="mb-0">Nenhuma review pendente.</p>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mt-4">
+                <p class="mb-0">Ainda não tem nenhuma review.</p>
+            </div>
+        }
+    }
+</div>

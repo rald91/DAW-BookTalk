@@ -1,0 +1,85 @@
+﻿@model MVC.Models.LivroCreateViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h4>Editar Livro</h4>
+<hr />
+<div class="row">
+    <div class="col-md-10">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="IdLivro" />
+            <div class="form-group">
+                <label asp-for="Titulo" class="control-label"></label>
+                <input asp-for="Titulo" class="form-control" />
+                <span asp-validation-for="Titulo" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AuthorNamesString" class="control-label"></label>
+                <textarea asp-for="AuthorNamesString" class="form-control" 
+                          placeholder="Separe múltiplos autores por vírgula (ex: Autor1, Autor2, Autor3)"></textarea>
+                <span asp-validation-for="AuthorNamesString" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="GenreNamesString" class="control-label"></label>
+                <textarea asp-for="GenreNamesString" class="form-control" 
+                          placeholder="Separe múltiplos géneros por vírgula (ex: Ficção, Romance)"></textarea>
+                <span asp-validation-for="GenreNamesString" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Editora</label>
+                <select asp-for="IdEditora" class="form-control" asp-items="ViewBag.Editoras">
+                    <option value="">-- Selecione uma Editora --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label asp-for="NovaEditoraNome" class="control-label"></label>
+                <input asp-for="NovaEditoraNome" class="form-control" placeholder="Ou criar nova editora" />
+                <span asp-validation-for="NovaEditoraNome" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ISBN" class="control-label"></label>
+                <input asp-for="ISBN" class="form-control" />
+                <span asp-validation-for="ISBN" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AnoPublicacao" class="control-label"></label>
+                <input type="text" name="AnoPublicacao" value="@(Model.AnoPublicacao?.ToString("dd/MM/yyyy"))" class="form-control" placeholder="DD/MM/YYYY" />
+                <span asp-validation-for="AnoPublicacao" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Idioma" class="control-label"></label>
+                <input asp-for="Idioma" class="form-control" />
+                <span asp-validation-for="Idioma" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Sinopse" class="control-label"></label>
+                <textarea asp-for="Sinopse" class="form-control"></textarea>
+                <span asp-validation-for="Sinopse" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Estado" class="control-label"></label>
+                <select asp-for="Estado" class="form-control">
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                </select>
+                <span asp-validation-for="Estado" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CapaUrl" class="control-label"></label>
+                <input asp-for="CapaUrl" class="form-control" />
+                <span asp-validation-for="CapaUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="Guardar" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary ms-2">Voltar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
